@@ -86,7 +86,7 @@ export function preloadReels(reels, onSettled) {
     settled += 1;
     onSettled(settled, total);
   };
-  const load = (src) =>
+  const loadImage = (src) =>
     new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
@@ -99,6 +99,13 @@ export function preloadReels(reels, onSettled) {
       };
       img.src = src;
     });
-  const all = reels.flatMap((r) => [load(r.cover), load(r.preview)]);
+  const loadVideo = (src) => new Promise((resolve) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.onloadeddata = () => { tick(); resolve(); };
+    video.onerror = () => { tick(); resolve(); };
+    video.src = src;
+  });
+  const all = reels.flatMap((r) => [loadImage(r.cover), loadVideo(r.src)]);
   return { total, done: Promise.all(all) };
 }

@@ -1,41 +1,68 @@
-import { useMemo, useRef, useState } from 'react';
-import VehicleViewer from './components/VehicleViewer.jsx';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { animate, motion, useMotionValue, useSpring } from 'framer-motion';
+import Ring from './components/Ring.jsx';
+import Loader from './components/Loader.jsx';
+import { buildReels, preloadReels } from './lib/reels.js';
 
-const cars = [
-  { id:'revuelto', brand:'Lamborghini', model:'Revuelto', type:'Supercar', hp:'1,001 HP', zero:'2.5s', top:'350 km/h', drive:'AWD', powertrain:'V12 Hybrid', price:'$608,000', image:'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?auto=format&fit=crop&w=1800&q=85' },
-  { id:'gt3', brand:'Porsche', model:'911 GT3 RS', type:'Sports Car', hp:'518 HP', zero:'3.2s', top:'296 km/h', drive:'RWD', powertrain:'4.0L Flat-6', price:'$241,300', image:'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1800&q=85' },
-  { id:'nevera', brand:'Rimac', model:'Nevera', type:'Hypercar', hp:'1,914 HP', zero:'1.81s', top:'412 km/h', drive:'AWD', powertrain:'Electric', price:'$2,200,000', image:'https://images.unsplash.com/photo-1614200187524-dc4b892acf16?auto=format&fit=crop&w=1800&q=85' },
-  { id:'senna', brand:'McLaren', model:'Senna', type:'Hypercar', hp:'789 HP', zero:'2.8s', top:'335 km/h', drive:'RWD', powertrain:'4.0L V8', price:'$1,000,000', image:'https://images.unsplash.com/photo-1592198084033-aade902d1aae?auto=format&fit=crop&w=1800&q=85' },
-  { id:'spectre', brand:'Rolls-Royce', model:'Spectre', type:'Luxury', hp:'577 HP', zero:'4.5s', top:'250 km/h', drive:'AWD', powertrain:'Electric', price:'$422,750', image:'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=1800&q=85' },
-  { id:'taycan', brand:'Porsche', model:'Taycan Turbo GT', type:'Electric', hp:'1,092 HP', zero:'2.2s', top:'305 km/h', drive:'AWD', powertrain:'Electric', price:'$231,995', image:'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1800&q=85' },
-  { id:'valkyrie', brand:'Aston Martin', model:'Valkyrie', type:'Hypercar', hp:'1,160 HP', zero:'2.5s', top:'355 km/h', drive:'RWD', powertrain:'V12 Hybrid', price:'$3,500,000', image:'https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=1800&q=85' },
-  { id:'chiron', brand:'Bugatti', model:'Chiron Super Sport', type:'Hypercar', hp:'1,578 HP', zero:'2.4s', top:'440 km/h', drive:'AWD', powertrain:'8.0L W16', price:'$3,825,000', image:'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=1800&q=85' },
-  { id:'model-s', brand:'Tesla', model:'Model S Plaid', type:'Electric', hp:'1,020 HP', zero:'2.1s', top:'322 km/h', drive:'AWD', powertrain:'Tri-motor Electric', price:'$89,990', image:'https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=1800&q=85' },
-  { id:'m5', brand:'BMW', model:'M5 Touring', type:'Luxury', hp:'717 HP', zero:'3.6s', top:'305 km/h', drive:'AWD', powertrain:'V8 Hybrid', price:'$121,500', image:'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1800&q=85' },
-];
-const filters = ['All','Supercar','Hypercar','Luxury','Sports Car','Electric'];
-
-function CompareImage({ title, onChange, src, onClear }) {
-  const input = useRef(null);
-  return <div className="upload-slot" onClick={()=>input.current?.click()}><input ref={input} type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>onChange(e.target.files?.[0])} />{src ? <><img src={src} alt={title}/><button className="slot-clear" onClick={e=>{e.stopPropagation();onClear()}}>×</button></> : <><span className="upload-icon">＋</span><strong>{title}</strong><small>Upload JPG, PNG or WEBP</small></>}</div>;
-}
+const EASE_EXPAND = [0.5, 0, 0.15, 1];
 
 export default function App() {
-  const [filter, setFilter] = useState('All'); const [query, setQuery] = useState(''); const [active, setActive] = useState(cars[0]); const [compare, setCompare] = useState([cars[0], cars[1]]); const [viewer, setViewer] = useState(false); const [upload, setUpload] = useState([null,null]);
-  const visible = useMemo(()=>cars.filter(c=>(filter==='All'||c.type===filter)&&`${c.brand} ${c.model}`.toLowerCase().includes(query.toLowerCase())),[filter,query]);
-  const selectCompare = car => setCompare(prev=>prev.some(x=>x.id===car.id)?prev.filter(x=>x.id!==car.id):prev.length<3?[...prev,car]:prev);
-  const fileUrl = (slot,file) => { if (!file) return; if (!file.type.startsWith('image/')) return; setUpload(prev=>{const next=[...prev]; if(next[slot]) URL.revokeObjectURL(next[slot]); next[slot]=URL.createObjectURL(file); return next;}); };
-  return <div className="nx-site">
-    <header className="nx-nav"><a href="#top" className="nx-logo"><b>N</b><span>NEXORA <small>AUTOMOTIVE</small></span></a><nav><a href="#collection">Collection</a><a href="#showroom">Showroom</a><a href="#compare">Compare</a><a href="#brands">Brands</a></nav><div className="nx-search"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search a machine"/></div><button className="nx-menu" aria-label="Open menu">☰</button></header>
-    <main>
-      <section className="nx-hero" id="top"><div className="nx-hero-copy"><p className="nx-kicker">NEXORA / 01 — THE NEW CLASS</p><h1>ENGINEERED<br/><em>FOR THE</em><br/>EXTRAORDINARY.</h1><p>Discover the machines that redefine performance, luxury, and the future of mobility.</p><div className="nx-hero-actions"><a className="nx-btn nx-btn-fill" href="#collection">Explore collection <span>↗</span></a><button className="nx-btn" onClick={()=>setViewer(true)}>Enter 3D showroom <span>◈</span></button></div></div><div className="nx-hero-visual"><div className="nx-orbit"/><img src={active.image} alt={`${active.brand} ${active.model}`}/><div className="nx-feature"><small>FEATURED MACHINE</small><strong>{active.brand} {active.model}</strong><span>{active.hp} · {active.zero} 0—100</span></div></div><div className="nx-scroll">SCROLL TO EXPLORE <b>↓</b></div></section>
-      <section className="nx-intro"><div><p className="nx-kicker">THE NEXORA INDEX</p><h2>Not just a collection.<br/><em>A point of view.</em></h2></div><p>We curate the rarest expressions of automotive design — from hand-built icons to electric pioneers. Machines selected for the way they make you feel long after the engine stops.</p></section>
-      <section className="nx-marquee">PRECISION <b>✦</b> POWER <b>✦</b> PRESENCE <b>✦</b> PRECISION <b>✦</b> POWER <b>✦</b> PRESENCE</section>
-      <section className="nx-section" id="collection"><div className="nx-section-head"><div><p className="nx-kicker">02 — THE COLLECTION</p><h2>Choose your <em>impossible.</em></h2></div><div className="nx-filters">{filters.map(x=><button className={filter===x?'active':''} onClick={()=>setFilter(x)} key={x}>{x}</button>)}</div></div><div className="nx-grid">{visible.map((car,i)=><article className={`nx-card ${i===0?'lead':''}`} key={car.id} onClick={()=>{setActive(car);window.scrollTo({top:0,behavior:'smooth'})}}><div className="nx-card-img"><img src={car.image} alt={`${car.brand} ${car.model}`} loading="lazy"/><span>0{i+1}</span><i>↗</i></div><div className="nx-card-copy"><small>{car.brand} · {car.type}</small><h3>{car.model}</h3><div><span>{car.hp}</span><span>{car.zero} 0—100</span><span>{car.powertrain}</span></div><footer><button onClick={e=>{e.stopPropagation();setViewer(true)}}>Explore in 3D ↗</button><button className={compare.some(x=>x.id===car.id)?'added':''} onClick={e=>{e.stopPropagation();selectCompare(car)}}>{compare.some(x=>x.id===car.id)?'Added':'Compare +'}</button></footer></div></article>)}</div></section>
-      <section className="nx-showroom" id="showroom"><div><p className="nx-kicker">03 — THE SHOWROOM</p><h2>Real-time<br/><em>machine study.</em></h2><p>Orbit a procedural 3D vehicle, change its paint, toggle auto-rotation, and inspect every line. No flat image pretending to be 3D.</p><button className="nx-btn nx-btn-fill" onClick={()=>setViewer(true)}>Open 3D viewer ↗</button></div><div className="nx-preview"><VehicleViewer vehicle={active} compact/></div></section>
-      <section className="nx-brands nx-section" id="brands"><p className="nx-kicker">04 — THE MARQUES</p><h2>Icons of <em>intention.</em></h2><div className="nx-brand-grid">{['BMW','Mercedes-Benz','Lamborghini','Ferrari','Porsche','Tesla','Audi','McLaren','Bugatti','Aston Martin','Rolls-Royce','Koenigsegg','Rimac','Pagani','Lotus','Maserati'].map((b,i)=><button key={b} onClick={()=>setQuery(b)}><span>0{i+1}</span>{b}<b>↗</b></button>)}</div></section>
-      <section className="nx-compare" id="compare"><div><p className="nx-kicker">05 — COMPARISON STUDIO</p><h2>Put them<br/><em>head to head.</em></h2><p>Compare curated vehicles or upload two of your own car photos. Uploads stay local to this browser.</p></div><div className="nx-compare-body"><div className="nx-compare-cars">{compare.map(car=><div className="nx-compare-car" key={car.id}><img src={car.image} alt=""/><span>{car.brand}<b>{car.model}</b></span><button onClick={()=>selectCompare(car)}>×</button></div>)}<button className="nx-add" onClick={()=>document.getElementById('collection').scrollIntoView({behavior:'smooth'})}>＋ Add vehicle</button></div><div className="nx-compare-table">{[['POWER','hp'],['0—100 KM/H','zero'],['TOP SPEED','top'],['DRIVETRAIN','drive'],['POWERTRAIN','powertrain'],['PRICE','price']].map(([label,key])=><div key={key}><span>{label}</span>{compare.map(car=><b key={car.id}>{car[key]}</b>)}</div>)}</div><div className="nx-upload-grid"><CompareImage title="Upload car one" src={upload[0]} onChange={f=>fileUrl(0,f)} onClear={()=>setUpload(p=>[null,p[1]])}/><CompareImage title="Upload car two" src={upload[1]} onChange={f=>fileUrl(1,f)} onClear={()=>setUpload(p=>[p[0],null])}/></div></div></section>
-    </main><footer className="nx-footer"><a href="#top" className="nx-logo"><b>N</b><span>NEXORA <small>AUTOMOTIVE</small></span></a><span>THE FUTURE OF LUXURY CARS</span><small>© 2025 NEXORA AUTOMOTIVE · Independent automotive editorial</small></footer>
-    {viewer&&<div className="nx-overlay" onClick={()=>setViewer(false)}><div className="nx-viewer-modal" onClick={e=>e.stopPropagation()}><button className="nx-close" onClick={()=>setViewer(false)}>×</button><p className="nx-kicker">INTERACTIVE VIEWER / {active.brand}</p><h2>{active.model}</h2><VehicleViewer vehicle={active}/></div></div>}
+  const reelsRef = useRef(null);
+  if (!reelsRef.current) reelsRef.current = buildReels();
+  const reels = reelsRef.current;
+  const formation = useMotionValue(0);
+  const expansion = useMotionValue(0);
+  const ringTarget = useMotionValue(0);
+  const ringAngle = useSpring(ringTarget, { stiffness: 34, damping: 28, mass: 1.1 });
+  const brandRef = useRef(null);
+  const interactive = useRef(false);
+  const skipRef = useRef(false);
+  const [progress, setProgress] = useState(0);
+  const [captionT, setCaptionT] = useState(0);
+  const [phase, setPhase] = useState('loader');
+  const [brandFlight, setBrandFlight] = useState(null);
+  const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const live = phase === 'live' || reduced;
+
+  const finish = useCallback(() => { interactive.current = true; setPhase('live'); }, []);
+  const skip = useCallback(() => {
+    if (skipRef.current || live) return;
+    skipRef.current = true; formation.set(1); expansion.set(1); setProgress(1); setCaptionT(1); setBrandFlight(null); finish();
+  }, [expansion, finish, formation, live]);
+
+  useEffect(() => {
+    if (reduced) { formation.set(1); expansion.set(1); setProgress(1); setCaptionT(1); finish(); return undefined; }
+    let cancelled = false; let formed = false; let assets = false; let expanded = false;
+    const beginExpansion = () => {
+      if (cancelled || skipRef.current || expanded || !formed || !assets) return;
+      expanded = true; setPhase('handoff'); setCaptionT(1);
+      const brand = brandRef.current;
+      const wordmark = document.querySelector('.wordmark');
+      if (brand && wordmark) { const a = brand.getBoundingClientRect(); const b = wordmark.getBoundingClientRect(); setBrandFlight({ x: b.left + b.width / 2 - (a.left + a.width / 2), y: b.top + b.height / 2 - (a.top + a.height / 2), scale: b.height / a.height }); }
+      animate(expansion, 1, { duration: 1.9, ease: EASE_EXPAND, onComplete: () => { if (!skipRef.current) finish(); } });
+    };
+    const deal = animate(formation, 1, { duration: 2.6, ease: 'linear', onComplete: () => { formed = true; beginExpansion(); } });
+    const loaded = preloadReels(reels, (settled, total) => { if (!cancelled) setProgress(settled / total); });
+    loaded.done.then(() => { assets = true; beginExpansion(); });
+    return () => { cancelled = true; deal.stop(); };
+  }, [expansion, finish, formation, reduced, reels]);
+
+  useEffect(() => { if (live) return undefined; const t = setTimeout(skip, 9000); return () => clearTimeout(t); }, [live, skip]);
+  useEffect(() => { if (live || reduced) return undefined; const id = setInterval(() => setCaptionT(t => Math.min(1, t + .07)), 90); return () => clearInterval(id); }, [live, reduced]);
+  useEffect(() => { const onKey = e => { if (e.key === 'Escape' || e.key === 'Tab') skip(); }; window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey); }, [skip]);
+  useEffect(() => { if (!live || reduced) return undefined; let raf; let last = performance.now(); const tick = now => { const dt = Math.min((now - last) / 1000, .05); last = now; if (!document.hidden && !skipRef.current) ringTarget.set(ringTarget.get() + dt * 4.2); raf = requestAnimationFrame(tick); }; raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf); }, [live, reduced, ringTarget]);
+  useEffect(() => { document.documentElement.classList.toggle('no-scroll', !live); document.body.classList.toggle('no-scroll', !live); return () => { document.documentElement.classList.remove('no-scroll'); document.body.classList.remove('no-scroll'); }; }, [live]);
+
+  return <div className={`app${live ? ' is-live' : ''}`}>
+    <div className="hero-shell" id="top">
+      <div className="frame" aria-hidden="true"><span className="frame-label">EST. 2026 — VERTICAL FORMAT ONLY</span><span className="frame-label right">DRAG · SWIPE · SCROLL</span></div>
+      <header className="header"><a className="wordmark" href="#top">REELRING</a><nav><a href="#feed">Feed</a><a href="#about">About</a><a href="#archive">Archive</a><a className="nav-cta" href="#feed">Explore</a></nav></header>
+      <main className="hero"><Ring reels={reels} formation={formation} expansion={expansion} ringTarget={ringTarget} ringAngle={ringAngle} interactive={interactive} live={live}/><div className="headline"><motion.h1 animate={{ opacity: live ? 1 : 0, y: live ? 0 : 32 }} transition={{ duration: .9, ease: EASE_EXPAND }}>The feed,<br/>in the round.</motion.h1><motion.p animate={{ opacity: live ? 1 : 0, y: live ? 0 : 20 }} transition={{ duration: .9, delay: .12, ease: EASE_EXPAND }}>Sixteen live reels on one spinning wall. Drag it, flick it, fall in — then scroll for the full feed.</motion.p><a className="scroll-cue" href="#feed">Scroll for feed <span>↓</span></a></div></main>
+      {!live && <Loader progress={progress} captionT={captionT} brandRef={brandRef} visible={phase !== 'live'} brandFlying={!!brandFlight}/>} {brandFlight && <motion.div className="brand-ghost" initial={{x:0,y:0,scale:1}} animate={brandFlight} transition={{duration:.85,ease:EASE_EXPAND}}>REELRING</motion.div>}
+      {!reduced && !live && <button className="skip" onClick={skip}>Skip intro <span>→</span></button>}
+    </div>
+    {live && <section className="feed-section" id="feed"><p className="kicker">THE WALL / 01</p><h2>Sixteen windows.<br/><em>One endless scroll.</em></h2><p className="feed-copy">A vertical-first space for ideas in motion. Drag the wall above or continue down for the complete signal.</p><div className="feed-rule"/><div className="feed-grid">{reels.slice(0,8).map(reel => <a href={reel.href} key={reel.id}><img src={reel.cover} alt=""/><span>{reel.title}</span></a>)}</div></section>}
+    <footer id="about"><span>REELRING © 2026</span><span>Built with React + Motion + CSS 3D.</span></footer>
+    <p className="sr-only" role="status" aria-live="polite">{live ? 'Carousel ready.' : 'Loading reels.'}</p>
   </div>;
 }

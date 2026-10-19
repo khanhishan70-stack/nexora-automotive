@@ -41,6 +41,7 @@ export default function Ring({
   ringAngle,
   interactive,
   live,
+  onProductOpen,
 }) {
   const stageRef = useRef(null);
   const ringRef = useRef(null);
@@ -149,14 +150,18 @@ export default function Ring({
         const cover = el.querySelector('.card-cover');
         const preview = el.querySelector('.card-preview');
         const title = el.querySelector('.card-title');
-        const author = el.querySelector('.card-author');
-        const views = el.querySelector('.card-views');
-        const idx = el.querySelector('.card-index');
+         const author = el.querySelector('.card-author');
+         const price = el.querySelector('.card-price');
+         const description = el.querySelector('.card-product-description');
+         const offer = el.querySelector('.card-offer');
+         const idx = el.querySelector('.card-index');
         if (cover) cover.src = reel.cover;
         if (preview) preview.src = reel.preview;
-        if (title) title.textContent = reel.title;
-        if (author) author.textContent = reel.author;
-        if (views) views.textContent = reel.views;
+         if (title) title.textContent = reel.title;
+         if (description) description.textContent = reel.description || reel.title;
+         if (author) author.textContent = reel.author;
+         if (price) price.textContent = reel.price || reel.views;
+         if (offer) offer.textContent = reel.discount || '';
         if (idx) idx.textContent = String(reel.index).padStart(2, '0');
         el.href = reel.href;
         el.setAttribute('aria-label', `Open ${reel.title} by ${reel.author}`);
@@ -252,10 +257,23 @@ export default function Ring({
               className={`card${hovered === i ? ' is-hovered' : ''}`}
               data-slot={i}
               href={reel.href}
+              target="_blank"
+              rel="noreferrer"
               aria-label={`Open ${reel.title} by ${reel.author}`}
               ref={(el) => (cardRefs.current[i] = el)}
               style={{ opacity: 0, transform: 'translate(-50%, -50%)' }}
               tabIndex={interactive.current ? 0 : -1}
+              onClick={(event) => {
+                if (pointer.current.moved) {
+                  event.preventDefault();
+                  pointer.current.moved = false;
+                  return;
+                }
+                if (onProductOpen) {
+                  event.preventDefault();
+                  onProductOpen(reel);
+                }
+              }}
             >
               <span className="card-face">
                 <img className="card-cover" src={reel.cover} alt="" draggable={false} />
@@ -266,11 +284,13 @@ export default function Ring({
                   <span className="card-live-dot" aria-hidden="true" />
                   {reel.isLive ? 'LIVE' : reel.platform?.toUpperCase()}
                 </span>
+                {reel.discount && <span className="card-offer">{reel.discount}</span>}
                 <span className="card-meta">
                   <span className="card-title">{reel.title}</span>
+                  <span className="card-product-description">{reel.description}</span>
                   <span className="card-sub">
                     <span className="card-author">{reel.author}</span>
-                    <span className="card-views">{reel.views}</span>
+                    <span className="card-price">{reel.price}</span>
                   </span>
                 </span>
               </span>

@@ -1,8 +1,20 @@
-export const REEL_COUNT = 36;
+export const REEL_COUNT = 24;
 export const SLOT_COUNT = 16;
 
-const ADJ = ['NEON', 'VOID', 'SLOW', 'RAW', 'ACID', 'GHOST', 'ULTRA', 'NIGHT', 'FLUX', 'PRISM', 'ECHO', 'HYPER'];
-const NOUN = ['DRIFT', 'SIGNAL', 'RUNNER', 'BLOOM', 'CIRCUIT', 'TIDE', 'STATIC', 'MIRAGE', 'PULSE', 'ORBIT', 'FRACTURE', 'GLASS'];
+const PRODUCTS = [
+  ['Sony', 'WH-1000XM5', 'Wireless Noise Cancelling Headphones', 'Electronics', '$299.99', '$399.99', '25% OFF', '4.7'],
+  ['Apple', 'AirPods Pro 2', 'Wireless Earbuds with USB-C', 'Electronics', '$189.99', '$249.00', '24% OFF', '4.6'],
+  ['Kindle', 'Paperwhite', '16 GB E-reader with adjustable warm light', 'Books', '$134.99', '$169.99', '21% OFF', '4.7'],
+  ['Anker', '737 Power Bank', 'PowerCore 24,000mAh portable charger', 'Tech accessories', '$99.99', '$149.99', '33% OFF', '4.6'],
+  ['Logitech', 'MX Master 3S', 'Wireless performance mouse', 'Office', '$79.99', '$99.99', '20% OFF', '4.8'],
+  ['Ninja', 'Air Fryer Pro', '6-in-1 5 QT digital air fryer', 'Kitchen', '$89.99', '$129.99', '31% OFF', '4.7'],
+  ['LEGO', 'Botanical Collection', 'Wildflower Bouquet building set', 'Home', '$44.99', '$59.99', '25% OFF', '4.9'],
+  ['Stanley', 'Quencher H2.0', 'FlowState insulated tumbler 40 oz', 'Lifestyle', '$34.95', '$45.00', '22% OFF', '4.8'],
+  ['Samsung', 'T7 Shield', '1TB portable SSD USB 3.2', 'Computing', '$84.99', '$129.99', '35% OFF', '4.8'],
+  ['Bose', 'SoundLink Flex', 'Portable Bluetooth speaker', 'Audio', '$119.00', '$149.00', '20% OFF', '4.7'],
+  ['Razer', 'BlackShark V2', 'Pro wireless gaming headset', 'Gaming', '$129.99', '$179.99', '28% OFF', '4.5'],
+  ['Hydro Flask', 'Wide Mouth', '32 oz insulated water bottle', 'Lifestyle', '$29.95', '$39.95', '25% OFF', '4.8'],
+];
 
 function mulberry32(seed) {
   let a = seed >>> 0;
@@ -60,20 +72,28 @@ export function coverSvg(i, title) {
 }
 
 export function buildReels() {
-  const rand = mulberry32(20261018);
   const reels = [];
   for (let i = 0; i < REEL_COUNT; i++) {
-    const title = `${ADJ[Math.floor(rand() * ADJ.length)]} ${NOUN[Math.floor(rand() * NOUN.length)]}`;
+    const [brand, model, title, category, price, oldPrice, discount, rating] = PRODUCTS[i % PRODUCTS.length];
+    const productTitle = `${brand} ${model}`;
     reels.push({
       id: `reel-${i}`,
       index: i,
-      title,
-      author: `@${title.toLowerCase().replace(/\s+/g, '.')}.${100 + Math.floor(rand() * 900)}`,
-      cover: coverSvg(i, title),
-      preview: coverSvg(i + 100, title),
+      title: productTitle,
+      description: title,
+      author: category,
+      brand,
+      category,
+      price,
+      oldPrice,
+      discount,
+      rating,
+      merchant: 'Amazon marketplace',
+      cover: coverSvg(i, productTitle),
+      preview: coverSvg(i + 100, productTitle),
       src: `/demo/reel-${i % 14}.mp4`,
-      views: `${(rand() * 9.2 + 0.3).toFixed(1)}M`,
-      href: `#reel-${i}`,
+      views: 'Offer pick',
+      href: `https://www.amazon.com/s?k=${encodeURIComponent(productTitle)}`,
     });
   }
   return reels;

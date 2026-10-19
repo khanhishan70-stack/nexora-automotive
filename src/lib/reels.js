@@ -2,18 +2,18 @@ export const REEL_COUNT = 24;
 export const SLOT_COUNT = 16;
 
 const PRODUCTS = [
-  ['Sony', 'WH-1000XM5', 'Wireless Noise Cancelling Headphones', 'Electronics', '$299.99', '$399.99', '25% OFF', '4.7'],
-  ['Apple', 'AirPods Pro 2', 'Wireless Earbuds with USB-C', 'Electronics', '$189.99', '$249.00', '24% OFF', '4.6'],
-  ['Kindle', 'Paperwhite', '16 GB E-reader with adjustable warm light', 'Books', '$134.99', '$169.99', '21% OFF', '4.7'],
-  ['Anker', '737 Power Bank', 'PowerCore 24,000mAh portable charger', 'Tech accessories', '$99.99', '$149.99', '33% OFF', '4.6'],
-  ['Logitech', 'MX Master 3S', 'Wireless performance mouse', 'Office', '$79.99', '$99.99', '20% OFF', '4.8'],
-  ['Ninja', 'Air Fryer Pro', '6-in-1 5 QT digital air fryer', 'Kitchen', '$89.99', '$129.99', '31% OFF', '4.7'],
-  ['LEGO', 'Botanical Collection', 'Wildflower Bouquet building set', 'Home', '$44.99', '$59.99', '25% OFF', '4.9'],
-  ['Stanley', 'Quencher H2.0', 'FlowState insulated tumbler 40 oz', 'Lifestyle', '$34.95', '$45.00', '22% OFF', '4.8'],
-  ['Samsung', 'T7 Shield', '1TB portable SSD USB 3.2', 'Computing', '$84.99', '$129.99', '35% OFF', '4.8'],
-  ['Bose', 'SoundLink Flex', 'Portable Bluetooth speaker', 'Audio', '$119.00', '$149.00', '20% OFF', '4.7'],
-  ['Razer', 'BlackShark V2', 'Pro wireless gaming headset', 'Gaming', '$129.99', '$179.99', '28% OFF', '4.5'],
-  ['Hydro Flask', 'Wide Mouth', '32 oz insulated water bottle', 'Lifestyle', '$29.95', '$39.95', '25% OFF', '4.8'],
+  ['Sony', 'WH-1000XM5', 'Wireless Noise Cancelling Headphones', 'Electronics', '$299.99', '$399.99', '25% OFF', '4.7', 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=85'],
+  ['Apple', 'AirPods Pro 2', 'Wireless Earbuds with USB-C', 'Electronics', '$189.99', '$249.00', '24% OFF', '4.6', 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=900&q=85'],
+  ['Kindle', 'Paperwhite', '16 GB E-reader with adjustable warm light', 'Books', '$134.99', '$169.99', '21% OFF', '4.7', 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=900&q=85'],
+  ['Anker', '737 Power Bank', 'PowerCore 24,000mAh portable charger', 'Tech accessories', '$99.99', '$149.99', '33% OFF', '4.6', 'https://images.unsplash.com/photo-1609592424858-2cbf3a3e9d3d?auto=format&fit=crop&w=900&q=85'],
+  ['Logitech', 'MX Master 3S', 'Wireless performance mouse', 'Office', '$79.99', '$99.99', '20% OFF', '4.8', 'https://images.unsplash.com/photo-1527814050087-3793815479db?auto=format&fit=crop&w=900&q=85'],
+  ['Ninja', 'Air Fryer Pro', '6-in-1 5 QT digital air fryer', 'Kitchen', '$89.99', '$129.99', '31% OFF', '4.7', 'https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=900&q=85'],
+  ['LEGO', 'Botanical Collection', 'Wildflower Bouquet building set', 'Home', '$44.99', '$59.99', '25% OFF', '4.9', 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?auto=format&fit=crop&w=900&q=85'],
+  ['Stanley', 'Quencher H2.0', 'FlowState insulated tumbler 40 oz', 'Lifestyle', '$34.95', '$45.00', '22% OFF', '4.8', 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=900&q=85'],
+  ['Samsung', 'T7 Shield', '1TB portable SSD USB 3.2', 'Computing', '$84.99', '$129.99', '35% OFF', '4.8', 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=900&q=85'],
+  ['Bose', 'SoundLink Flex', 'Portable Bluetooth speaker', 'Audio', '$119.00', '$149.00', '20% OFF', '4.7', 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=900&q=85'],
+  ['Razer', 'BlackShark V2', 'Pro wireless gaming headset', 'Gaming', '$129.99', '$179.99', '28% OFF', '4.5', 'https://images.unsplash.com/photo-1599669454699-248893623440?auto=format&fit=crop&w=900&q=85'],
+  ['Hydro Flask', 'Wide Mouth', '32 oz insulated water bottle', 'Lifestyle', '$29.95', '$39.95', '25% OFF', '4.8', 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=900&q=85'],
 ];
 
 function mulberry32(seed) {
@@ -74,7 +74,7 @@ export function coverSvg(i, title) {
 export function buildReels() {
   const reels = [];
   for (let i = 0; i < REEL_COUNT; i++) {
-    const [brand, model, title, category, price, oldPrice, discount, rating] = PRODUCTS[i % PRODUCTS.length];
+    const [brand, model, title, category, price, oldPrice, discount, rating, image] = PRODUCTS[i % PRODUCTS.length];
     const productTitle = `${brand} ${model}`;
     reels.push({
       id: `reel-${i}`,
@@ -89,8 +89,8 @@ export function buildReels() {
       discount,
       rating,
       merchant: 'Amazon marketplace',
-      cover: coverSvg(i, productTitle),
-      preview: coverSvg(i + 100, productTitle),
+      cover: image || coverSvg(i, productTitle),
+      preview: image || coverSvg(i + 100, productTitle),
       src: `/demo/reel-${i % 14}.mp4`,
       views: 'Offer pick',
       href: `https://www.amazon.com/s?k=${encodeURIComponent(productTitle)}`,

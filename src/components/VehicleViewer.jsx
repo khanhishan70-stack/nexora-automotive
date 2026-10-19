@@ -1,0 +1,18 @@
+import { useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
+
+function makeCar(scene, paint) {
+  const group = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(3.8, .55, 1.65), new THREE.MeshPhysicalMaterial({color: paint, metalness:.9, roughness:.2, clearcoat:1})); body.position.y=.8; body.scale.z=.75; group.add(body);
+  const cabin = new THREE.Mesh(new THREE.CapsuleGeometry(.75, 1.5, 8, 16), new THREE.MeshPhysicalMaterial({color:0x0a1114, metalness:.25, roughness:.08, transparent:true, opacity:.92})); cabin.rotation.z=Math.PI/2; cabin.scale.set(1.35,.55,.7); cabin.position.set(.15,1.18,0); group.add(cabin);
+  const bumper = new THREE.Mesh(new THREE.BoxGeometry(4.1,.18,1.75), new THREE.MeshStandardMaterial({color:0x090b0b, metalness:.8, roughness:.3})); bumper.position.y=.58; group.add(bumper);
+  [-1.35,1.35].forEach(x=>[-.68,.68].forEach(z=>{const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.22,32),new THREE.MeshStandardMaterial({color:0x111315,metalness:.7,roughness:.25}));wheel.rotation.x=Math.PI/2;wheel.position.set(x,.48,z);group.add(wheel)}));
+  const lightMat=new THREE.MeshBasicMaterial({color:0xd7ff42}); [-1.65,1.65].forEach(x=>{const light=new THREE.Mesh(new THREE.BoxGeometry(.12,.13,1.05),lightMat);light.position.set(x,.78,0);group.add(light)});
+  scene.add(group); return group;
+}
+
+export default function VehicleViewer({ vehicle, compact=false }) {
+  const mount=useRef(null); const [auto,setAuto]=useState(true); const [paint,setPaint]=useState('#d7ff42'); const [error,setError]=useState(false);
+  useEffect(()=>{if(!mount.current)return; const el=mount.current; let renderer,frame; try {const scene=new THREE.Scene(); scene.background=new THREE.Color(0x0b1110); const camera=new THREE.PerspectiveCamera(35,1,.1,100);camera.position.set(5,2.8,6); const r=new THREE.WebGLRenderer({antialias:true,alpha:true});r.setPixelRatio(Math.min(devicePixelRatio,2));r.outputColorSpace=THREE.SRGBColorSpace;el.appendChild(r.domElement);renderer=r; scene.add(new THREE.HemisphereLight(0xb8ffff,0x101313,2)); const key=new THREE.DirectionalLight(0xd7ff42,4);key.position.set(3,5,4);scene.add(key); const car=makeCar(scene,paint); const resize=()=>{const w=el.clientWidth,h=el.clientHeight;r.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()};resize();const ro=new ResizeObserver(resize);ro.observe(el);let down=false,last=0;const move=e=>{if(!down)return;car.rotation.y+=(e.clientX-last)*.01;last=e.clientX};const downFn=e=>{down=true;last=e.clientX};const up=()=>{down=false};el.addEventListener('pointerdown',downFn);el.addEventListener('pointermove',move);window.addEventListener('pointerup',up);const tick=()=>{if(auto&&!down)car.rotation.y+=.003;r.render(scene,camera);frame=requestAnimationFrame(tick)};tick();return()=>{cancelAnimationFrame(frame);ro.disconnect();el.removeEventListener('pointerdown',downFn);el.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);scene.traverse(o=>{o.geometry?.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});r.dispose();if(el.contains(r.domElement))el.removeChild(r.domElement)}} catch(e){setError(true)}},[paint,auto]);
+  return <div className={`nx-viewer ${compact?'compact':''}`}><div className="nx-canvas" ref={mount}>{error&&<div className="nx-webgl-fallback"><img src={vehicle.image} alt=""/><span>WebGL unavailable — image fallback</span></div>}</div><div className="nx-viewer-tools"><button onClick={()=>setAuto(v=>!v)}>{auto?'Pause spin':'Auto-spin'}</button><label>PAINT <input type="color" value={paint} onChange={e=>setPaint(e.target.value)}/></label><span>DRAG TO ROTATE</span></div></div>;
+}

@@ -79,6 +79,19 @@ export function coverSvg(i, title) {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
+function productFallback(i, title, category, price) {
+  const { a, b, c, angle } = gradientFor(i + 31);
+  const safe = String(title).replace(/[<>&]/g, '');
+  const safeCategory = String(category).replace(/[<>&]/g, '');
+  const safePrice = String(price).replace(/[<>&]/g, '');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="540" height="960" viewBox="0 0 540 960">
+  <defs><linearGradient id="g" gradientTransform="rotate(${angle})"><stop stop-color="${a}"/><stop offset=".55" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></linearGradient><filter id="blur"><feGaussianBlur stdDeviation="24"/></filter></defs>
+  <rect width="540" height="960" fill="url(#g)"/><circle cx="420" cy="180" r="140" fill="#fff" opacity=".18" filter="url(#blur)"/><circle cx="120" cy="600" r="180" fill="#000" opacity=".22" filter="url(#blur)"/>
+  <rect x="82" y="170" width="376" height="370" rx="42" fill="#ffffff18" stroke="#ffffff70" stroke-width="3"/><circle cx="270" cy="330" r="106" fill="#0b1020aa" stroke="#ffffff88" stroke-width="4"/><circle cx="270" cy="330" r="52" fill="#ffffff22"/><path d="M205 404 Q270 450 335 404" fill="none" stroke="#fff" stroke-width="5" opacity=".7"/>
+  <text x="36" y="740" font-family="Arial,sans-serif" font-size="31" font-weight="700" fill="#fff">${safe}</text><text x="36" y="785" font-family="monospace" font-size="18" fill="#fff" opacity=".75">${safeCategory}</text><text x="36" y="860" font-family="monospace" font-size="28" fill="#fff">${safePrice}</text><text x="36" y="910" font-family="monospace" font-size="15" fill="#fff" opacity=".65">REELRING MARKETPLACE</text></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
 export function buildReels() {
   const reels = [];
   for (let i = 0; i < REEL_COUNT; i++) {
@@ -99,8 +112,8 @@ export function buildReels() {
       merchant: 'Amazon marketplace',
       cover: image || coverSvg(i, productTitle),
       preview: image || coverSvg(i + 100, productTitle),
-      fallbackCover: coverSvg(i, productTitle),
-      fallbackPreview: coverSvg(i + 100, productTitle),
+      fallbackCover: productFallback(i, productTitle, category, price),
+      fallbackPreview: productFallback(i + 100, productTitle, category, price),
       src: `/demo/reel-${i % 14}.mp4`,
       views: 'Offer pick',
       amazonUrl: `https://www.amazon.com/s?k=${encodeURIComponent(productTitle)}`,

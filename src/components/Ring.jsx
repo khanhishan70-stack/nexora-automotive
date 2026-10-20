@@ -155,8 +155,8 @@ export default function Ring({
          const description = el.querySelector('.card-product-description');
          const offer = el.querySelector('.card-offer');
          const idx = el.querySelector('.card-index');
-        if (cover) cover.src = reel.cover;
-        if (preview) preview.src = reel.preview;
+         if (cover) { cover.onerror = () => { cover.src = reel.fallbackCover || ''; }; cover.src = reel.cover; }
+         if (preview) { preview.onerror = () => { preview.src = reel.fallbackPreview || reel.fallbackCover || ''; }; preview.src = reel.preview; }
          if (title) title.textContent = reel.title;
          if (description) description.textContent = reel.description || reel.title;
          if (author) author.textContent = reel.author;
@@ -276,8 +276,8 @@ export default function Ring({
               }}
             >
               <span className="card-face">
-                <img className="card-cover" src={reel.cover} alt="" draggable={false} />
-                <img className="card-preview" src={reel.preview} alt="" draggable={false} />
+                 <img className="card-cover" src={reel.cover} alt={`${reel.title} product image`} draggable={false} onError={(event) => { event.currentTarget.src = reel.fallbackCover || ''; }} />
+                 <img className="card-preview" src={reel.preview} alt="" draggable={false} onError={(event) => { event.currentTarget.src = reel.fallbackPreview || reel.fallbackCover || ''; }} />
                 <span className="card-sheen" aria-hidden="true" />
                 <span className="card-index">{String(reel.index).padStart(2, '0')}</span>
                 <span className="card-live">

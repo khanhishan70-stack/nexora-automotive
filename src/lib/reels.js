@@ -14,6 +14,14 @@ const PRODUCTS = [
   ['Bose', 'SoundLink Flex', 'Portable Bluetooth speaker', 'Audio', '$119.00', '$149.00', '20% OFF', '4.7', 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=900&q=85'],
   ['Razer', 'BlackShark V2', 'Pro wireless gaming headset', 'Gaming', '$129.99', '$179.99', '28% OFF', '4.5', 'https://images.unsplash.com/photo-1599669454699-248893623440?auto=format&fit=crop&w=900&q=85'],
   ['Hydro Flask', 'Wide Mouth', '32 oz insulated water bottle', 'Lifestyle', '$29.95', '$39.95', '25% OFF', '4.8', 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=900&q=85'],
+  ['Apple', 'Watch Series 10', 'Smartwatch with fitness and health tracking', 'Wearables', '$399.00', '$429.00', '7% OFF', '4.6', 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=900&q=85'],
+  ['Meta', 'Quest 3S', 'Mixed reality headset with immersive gaming', 'Gaming', '$299.99', '$299.99', 'NEW', '4.5', 'https://images.unsplash.com/photo-1626379953822-baec19c3accd?auto=format&fit=crop&w=900&q=85'],
+  ['DJI', 'Osmo Pocket 3', '4K handheld creator camera with gimbal', 'Cameras', '$519.00', '$599.00', '13% OFF', '4.7', 'https://images.unsplash.com/photo-1606986628253-5e44a06c7c4f?auto=format&fit=crop&w=900&q=85'],
+  ['Dyson', 'V15 Detect', 'Cordless vacuum with laser dust detection', 'Home', '$649.99', '$749.99', '13% OFF', '4.6', 'https://images.unsplash.com/photo-1558317374-067fb5f30001?auto=format&fit=crop&w=900&q=85'],
+  ['Philips Hue', 'Starter Kit', 'Smart color ambiance lighting pack', 'Smart home', '$89.99', '$119.99', '25% OFF', '4.5', 'https://images.unsplash.com/photo-1558008258-3256797b43f3?auto=format&fit=crop&w=900&q=85'],
+  ['Instant Pot', 'Pro Plus', '6-quart smart pressure cooker', 'Kitchen', '$119.95', '$169.95', '29% OFF', '4.7', 'https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=900&q=85'],
+  ['Google', 'Pixel 9 Pro', 'AI-powered smartphone with pro camera', 'Mobile', '$899.00', '$999.00', '10% OFF', '4.4', 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=85'],
+  ['Bialetti', 'Moka Express', 'Classic stovetop espresso maker', 'Kitchen', '$34.99', '$49.99', '30% OFF', '4.8', 'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=900&q=85'],
 ];
 
 function mulberry32(seed) {
@@ -91,6 +99,8 @@ export function buildReels() {
       merchant: 'Amazon marketplace',
       cover: image || coverSvg(i, productTitle),
       preview: image || coverSvg(i + 100, productTitle),
+      fallbackCover: coverSvg(i, productTitle),
+      fallbackPreview: coverSvg(i + 100, productTitle),
       src: `/demo/reel-${i % 14}.mp4`,
       views: 'Offer pick',
       href: `https://www.amazon.com/s?k=${encodeURIComponent(productTitle)}`,

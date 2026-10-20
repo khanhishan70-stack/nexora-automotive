@@ -22,8 +22,28 @@ export default function App() {
   const [phase, setPhase] = useState('loader');
   const [brandFlight, setBrandFlight] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [marketReels, setMarketReels] = useState(reels);
+  const [offerState, setOfferState] = useState({ status: 'curated', checkedAt: null });
+  const [refreshingOffers, setRefreshingOffers] = useState(false);
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const live = phase === 'live' || reduced;
+
+  const refreshOffers = useCallback(async () => {
+    setRefreshingOffers(true);
+    try {
+      const response = await fetch('/api/marketplace/offers', { headers: { accept: 'application/json' } });
+      if (!response.ok) throw new Error('Amazon offers API is not connected');
+      const payload = await response.json();
+      if (!Array.isArray(payload.offers)) throw new Error('Invalid offers response');
+      const byId = new Map(payload.offers.map(offer => [offer.id, offer]));
+      setMarketReels(reels.map(product => ({ ...product, ...(byId.get(product.id) || {}) })));
+      setOfferState({ status: 'live', checkedAt: new Date() });
+    } catch {
+      setOfferState({ status: 'unavailable', checkedAt: new Date() });
+    } finally {
+      setRefreshingOffers(false);
+    }
+  }, [reels]);
 
   const finish = useCallback(() => { interactive.current = true; setPhase('live'); }, []);
   const skip = useCallback(() => {
@@ -58,13 +78,13 @@ export default function App() {
     <div className="hero-shell" id="top">
       <div className="frame" aria-hidden="true"><span className="frame-label">EST. 2026 — VERTICAL FORMAT ONLY</span><span className="frame-label right">DRAG · SWIPE · SCROLL</span></div>
       <header className="header"><a className="wordmark" href="#top">REELRING</a><nav><a href="#feed">Feed</a><a href="#about">About</a><a href="#archive">Archive</a><a className="nav-cta" href="#feed">Explore</a></nav></header>
-      <main className="hero"><Ring reels={reels} formation={formation} expansion={expansion} ringTarget={ringTarget} ringAngle={ringAngle} interactive={interactive} live={live} onProductOpen={setSelectedProduct}/><div className="headline"><motion.h1 animate={{ opacity: live ? 1 : 0, y: live ? 0 : 32 }} transition={{ duration: .9, ease: EASE_EXPAND }}>The feed,<br/>in the round.</motion.h1><motion.p animate={{ opacity: live ? 1 : 0, y: live ? 0 : 20 }} transition={{ duration: .9, delay: .12, ease: EASE_EXPAND }}>A rotating marketplace of sharp picks, limited-time offers, and useful product intelligence.</motion.p><a className="scroll-cue" href="#feed">Scroll for offers <span>↓</span></a></div></main>
+      <main className="hero"><Ring reels={marketReels} formation={formation} expansion={expansion} ringTarget={ringTarget} ringAngle={ringAngle} interactive={interactive} live={live} onProductOpen={setSelectedProduct}/><div className="headline"><motion.h1 animate={{ opacity: live ? 1 : 0, y: live ? 0 : 32 }} transition={{ duration: .9, ease: EASE_EXPAND }}>The feed,<br/>in the round.</motion.h1><motion.p animate={{ opacity: live ? 1 : 0, y: live ? 0 : 20 }} transition={{ duration: .9, delay: .12, ease: EASE_EXPAND }}>A rotating marketplace of sharp picks, limited-time offers, and useful product intelligence.</motion.p><a className="scroll-cue" href="#feed">Scroll for offers <span>↓</span></a></div></main>
       {!live && <Loader progress={progress} captionT={captionT} brandRef={brandRef} visible={phase !== 'live'} brandFlying={!!brandFlight}/>} {brandFlight && <motion.div className="brand-ghost" initial={{x:0,y:0,scale:1}} animate={brandFlight} transition={{duration:.85,ease:EASE_EXPAND}}>REELRING</motion.div>}
       {!reduced && !live && <button className="skip" onClick={skip}>Skip intro <span>→</span></button>}
     </div>
-    {live && <section className="feed-section" id="feed"><p className="kicker">THE MARKET / 01</p><h2>Find the good stuff.<br/><em>Skip the noise.</em></h2><p className="feed-copy">Curated Amazon marketplace picks with clear pricing, ratings, and a fast path to the product page. Click any moving card for the full brief.</p><div className="feed-rule"/><div className="offer-strip"><span><b>LIVE OFFER INDEX</b> Curated marketplace prices · verify final price on Amazon</span><span>12 categories <i>↗</i></span></div><div className="feed-grid">{reels.slice(0,8).map(reel => <button className="product-tile" onClick={()=>setSelectedProduct(reel)} key={reel.id}><img src={reel.cover} alt=""/><span>{reel.discount}</span><strong>{reel.title}</strong><small>{reel.price} · ★ {reel.rating}</small></button>)}</div></section>}
+    {live && <section className="feed-section" id="feed"><p className="kicker">THE MARKET / 01</p><h2>Find the good stuff.<br/><em>Skip the noise.</em></h2><p className="feed-copy">Curated Amazon marketplace picks with clear pricing, ratings, and a fast path to the product page. Click any moving card for the full brief.</p><div className="feed-rule"/><div className="offer-strip"><span><b>{offerState.status === 'live' ? 'LIVE AMAZON INDEX' : 'CURATED OFFER INDEX'}</b> {offerState.status === 'live' ? 'Live provider data loaded' : 'Demo prices shown — verify the current offer on Amazon'}</span><span>{offerState.checkedAt ? `Checked ${offerState.checkedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Not checked yet'} <button className="refresh-offers" onClick={refreshOffers} disabled={refreshingOffers}>{refreshingOffers ? 'Checking…' : 'Refresh offers ↻'}</button></span></div><div className="feed-grid">{marketReels.slice(0,8).map(reel => <button className="product-tile" onClick={()=>setSelectedProduct(reel)} key={reel.id}><img src={reel.cover} alt=""/><span>{reel.discount}</span><strong>{reel.title}</strong><small>{reel.price} · ★ {reel.rating}</small><em>View product ↗</em></button>)}</div></section>}
     <footer id="about"><span>REELRING © 2026</span><span>Built with React + Motion + CSS 3D.</span></footer>
-    {selectedProduct && <div className="product-modal-backdrop" onClick={()=>setSelectedProduct(null)}><article className="product-modal" onClick={event=>event.stopPropagation()}><button className="product-close" onClick={()=>setSelectedProduct(null)}>×</button><div className="product-modal-image"><img src={selectedProduct.cover} alt=""/><span>{selectedProduct.discount}</span></div><div className="product-modal-info"><p className="kicker">CURATED OFFER / {selectedProduct.category}</p><h2>{selectedProduct.title}</h2><p className="product-description">{selectedProduct.description}</p><div className="product-price"><strong>{selectedProduct.price}</strong><del>{selectedProduct.oldPrice}</del><span>★ {selectedProduct.rating}</span></div><div className="product-detail-grid"><span>MERCHANT<strong>{selectedProduct.merchant}</strong></span><span>OFFER<strong>{selectedProduct.discount}</strong></span><span>STATUS<strong>Check live availability</strong></span></div><a className="amazon-button" href={selectedProduct.href} target="_blank" rel="noreferrer">View on Amazon <span>↗</span></a><small className="product-disclaimer">Prices and availability can change. This page links to Amazon search results; confirm the current offer before purchasing.</small></div></article></div>}
+    {selectedProduct && <div className="product-modal-backdrop" onClick={()=>setSelectedProduct(null)}><article className="product-modal" onClick={event=>event.stopPropagation()}><button className="product-close" onClick={()=>setSelectedProduct(null)}>×</button><div className="product-modal-image"><img src={selectedProduct.cover} alt=""/><span>{selectedProduct.discount}</span></div><div className="product-modal-info"><p className="kicker">{offerState.status === 'live' ? 'LIVE AMAZON OFFER' : 'CURATED OFFER'} / {selectedProduct.category}</p><h2>{selectedProduct.title}</h2><p className="product-description">{selectedProduct.description}</p><div className="product-price"><strong>{selectedProduct.price}</strong><del>{selectedProduct.oldPrice}</del><span>★ {selectedProduct.rating}</span></div><div className="product-detail-grid"><span>MERCHANT<strong>{selectedProduct.merchant}</strong></span><span>OFFER<strong>{selectedProduct.discount}</strong></span><span>STATUS<strong>{offerState.status === 'live' ? 'Live provider data' : 'Verify on Amazon'}</strong></span></div><a className="amazon-button" href={selectedProduct.amazonUrl || selectedProduct.href} target="_blank" rel="noreferrer">Check live price on Amazon <span>↗</span></a><small className="product-disclaimer">{offerState.status === 'live' ? 'Offer data was returned by the connected marketplace provider.' : 'This site does not scrape Amazon. Prices shown here are curated fallback data until an Amazon Product Advertising API provider is connected.'}</small></div></article></div>}
     <p className="sr-only" role="status" aria-live="polite">{live ? 'Carousel ready.' : 'Loading reels.'}</p>
   </div>;
 }

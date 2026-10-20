@@ -58,7 +58,6 @@ export default function Ring({
   const frame = useRef(0);
   const [hovered, setHovered] = useState(-1);
   const [socialReels, setSocialReels] = useState([]);
-  const [demoReels] = useState(reels);
 
   useEffect(() => {
     if (useSocialFeed && socialVideos.length > 0) {
@@ -69,7 +68,7 @@ export default function Ring({
     }
   }, [useSocialFeed, socialVideos]);
 
-  const activeReels = useSocialFeed && socialReels.length > 0 ? socialReels : demoReels;
+  const activeReels = useSocialFeed && socialReels.length > 0 ? socialReels : reels;
   const totalReels = activeReels.length;
 
   useEffect(() => {

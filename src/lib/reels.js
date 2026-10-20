@@ -103,6 +103,7 @@ export function buildReels() {
       fallbackPreview: coverSvg(i + 100, productTitle),
       src: `/demo/reel-${i % 14}.mp4`,
       views: 'Offer pick',
+      amazonUrl: `https://www.amazon.com/s?k=${encodeURIComponent(productTitle)}`,
       href: `https://www.amazon.com/s?k=${encodeURIComponent(productTitle)}`,
     });
   }
